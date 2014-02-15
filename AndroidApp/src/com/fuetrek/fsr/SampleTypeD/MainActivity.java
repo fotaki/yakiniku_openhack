@@ -4,7 +4,10 @@ import java.io.*;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 
@@ -25,7 +28,6 @@ class SyncObj{
 
     synchronized void wait_(){
         try {
-            // wait_()繧医ｊ蜑阪↓notify_()縺悟他縺ｰ繧後◆蝣ｴ蜷医�蟇ｾ遲悶→縺励※isDone繝輔Λ繧ｰ繧偵メ繧ｧ繝�け縺励※縺�ｋ
             while(isDone==false){
                 wait(1000);
             }
@@ -48,16 +50,12 @@ public class MainActivity extends Activity{
     private TextView textResult_;
     private fsrController controller_ = new fsrController();
 
-
-    // BackendType縺ｯBackendType.D蝗ｺ螳�
     private static final BackendType backendType_ = BackendType.D;
 
 
     // Context
     private Activity activity_ = null;
 
-    // FSRService縺ｮ蠕�■蜃ｦ逅�〒繝悶Ο繝�く繝ｳ繧ｰ縺吶ｋ螳溯｣�→縺励※縺�ｋ轤ｺ縲�
-    // UI譖ｴ譁ｰ繧貞ｦｨ縺偵↑縺�ｈ縺�挨繧ｹ繝ｬ繝�ラ縺ｨ縺励※縺�ｋ縲�
     public class fsrController extends Thread implements FSRServiceEventListener {
         FSRServiceOpen fsr_;
         SyncObj event_CompleteConnect_ = new SyncObj();
@@ -70,7 +68,6 @@ public class MainActivity extends Activity{
         final Runnable notifyFinished = new Runnable() {
             public void run() {
                 try {
-                    // 蠢ｵ縺ｮ縺溘ａ繧ｹ繝ｬ繝�ラ縺ｮ螳御ｺ�ｒ蠕�▽
                     controller_.join();
                 } catch (InterruptedException e) {
                 }
@@ -93,8 +90,30 @@ public class MainActivity extends Activity{
                 e.printStackTrace();
             }
             
-            //SocketClientSample sample = new SocketClientSample();
-            //sample.SocketConnect();
+            WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+            if (wifiManager.isWifiEnabled() == false) {
+                wifiManager.setWifiEnabled(true);
+            }
+            
+            String ssid = "EZC_WIFI_5_0019";
+            WifiConfiguration config = new WifiConfiguration();
+            config.SSID = "\"" + ssid + "\"";
+            config.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+            config.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+            config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+            config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+            config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+            config.preSharedKey = "99999999";
+            int networkId = wifiManager.addNetwork(config); // 失敗した場合は-1となります
+            wifiManager.saveConfiguration();
+            wifiManager.updateNetwork(config);
+            
+            SocketClientSample sample = new SocketClientSample();
+            sample.SocketConnect();
             
             handler_.post(notifyFinished);
         }
@@ -264,6 +283,15 @@ public class MainActivity extends Activity{
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 }
+
+
+
+
+
+
+
+
+
 
 class SocketClientSample {
   /**	ポート番号	*/
