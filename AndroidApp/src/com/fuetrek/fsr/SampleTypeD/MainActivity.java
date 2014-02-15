@@ -52,6 +52,7 @@ public class MainActivity extends Activity{
 
     private static final BackendType backendType_ = BackendType.D;
 
+    private static DecideCommand dc = new DecideCommand();
 
     // Context
     private Activity activity_ = null;
@@ -89,12 +90,17 @@ public class MainActivity extends Activity{
                 result_ = "(error)";
                 e.printStackTrace();
             }
-            
+
+            String resultCommand = dc.getCommandType(result);
+            // test output
+    		System.out.println(result);
+    		System.out.println(resultCommand);
+
             WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
             if (wifiManager.isWifiEnabled() == false) {
                 wifiManager.setWifiEnabled(true);
             }
-            
+
             String ssid = "EZC_WIFI_5_0019";
             WifiConfiguration config = new WifiConfiguration();
             config.SSID = "\"" + ssid + "\"";
@@ -111,10 +117,10 @@ public class MainActivity extends Activity{
             int networkId = wifiManager.addNetwork(config); // 失敗した場合は-1となります
             wifiManager.saveConfiguration();
             wifiManager.updateNetwork(config);
-            
+
             SocketClientSample sample = new SocketClientSample();
             sample.SocketConnect();
-            
+
             handler_.post(notifyFinished);
         }
 
@@ -297,8 +303,8 @@ class SocketClientSample {
   /**	ポート番号	*/
   int port_no_ = 8899;
   String hostName_ = "10.10.100.103";
-  
-  public void SocketConnect() {  
+
+  public void SocketConnect() {
     try{
       // ソケットを生成
       Socket socket = new Socket(hostName_, port_no_);
@@ -311,30 +317,30 @@ class SocketClientSample {
     BufferedReader irStr = new BufferedReader(new InputStreamReader(is));
 
     char pwm[] = {0,0,0,0,0,0};
-    
+
     char senddata[] = {
             0x55,0x00,0x0b,0x00,   // header
             0x50,                  // accel data
             0x50,                  // handle data
             0x00,0x00,0x00,0x00,   // not use
             0x00};
-    
+
     for(int i=0;i<256;i++){
         int tmp = 0;
-        
+
 //        pthread_mutex_lock(&mutex);
         senddata[4] = pwm[0];
         senddata[5] = pwm[1];
         senddata[6] = pwm[2];
         senddata[7] = pwm[3];
 //        pthread_mutex_unlock(&mutex);
-        
+
         //　パリティ計算
         for(int j=0;j<10;j++){
           tmp = tmp + senddata[j];
           senddata[10] = (char)tmp;
         }
-        
+
         //データ送信
         osStr.write(senddata);
         osStr.flush();
